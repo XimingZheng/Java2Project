@@ -53,5 +53,11 @@ build/
 Thumbs.db
 Desktop.ini
 
-### Project Data (optional) ###
-data/
+# Ensure `python/` folder and Python scripts are not ignored.
+!python/
+!python/**
+
+# Keep `data/` directory in the repo, but ignore only JSONL files inside it.
+!data/
+data/*.jsonl
+data/**/*.jsonl
