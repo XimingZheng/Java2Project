@@ -10,23 +10,21 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/topics")
 public class TopicAnalysisController {
-
     private final TopicAnalysisService topicAnalysisService;
 
     public TopicAnalysisController(TopicAnalysisService topicAnalysisService) {
         this.topicAnalysisService = topicAnalysisService;
     }
 
-    /**
-     * 获取主题趋势数据
-     */
     @GetMapping("/trend")
     public ResponseEntity<Map<String, Object>> getTopicTrends(
             @RequestParam List<String> topics,
             @RequestParam String startDate,
-            @RequestParam String endDate) {
+            @RequestParam String endDate,
+            @RequestParam (required = false, defaultValue = "month") String period) {
 
-        Map<String, Object> result = topicAnalysisService.getTopicTrends(topics, startDate, endDate);
+        Map<String, Object> result = topicAnalysisService.getTopicTrends(topics, startDate,
+                endDate, period.toLowerCase());
         return ResponseEntity.ok(result);
     }
 
