@@ -40,12 +40,14 @@ public class TopicAnalysisController {
      * 获取主题活动度排名
      */
     @GetMapping("/activity")
-    public ResponseEntity<List<TopicAnalysisService.TopicActivity>> getTopicActivity(
+    public ResponseEntity<Map<String, Object>> getTopicActivity(
+            @RequestParam List<String> topics,
             @RequestParam String startDate,
-            @RequestParam String endDate) {
+            @RequestParam String endDate,
+            @RequestParam (required = false, defaultValue = "month") String period) {
 
-        List<TopicAnalysisService.TopicActivity> activities =
-                topicAnalysisService.getTopicActivityRanking(startDate, endDate);
-        return ResponseEntity.ok(activities);
+        Map<String, Object> result = topicAnalysisService.getTopicActivityScore(topics, startDate,
+                endDate, period.toLowerCase());
+        return ResponseEntity.ok(result);
     }
 }

@@ -42,37 +42,9 @@ public class TopicAnalysisService {
 
         List<StackOverflowThread> allThreads = dataLoaderService.getAllThreads();
 
-        List<String> keywords =
-                topics.stream()
-                        .flatMap(t -> TOPIC_KEYWORDS.getOrDefault(t, List.of()).stream())
-                        .distinct()
-                        .toList();
-
-        LocalDate start = LocalDate.parse(startDate);
-        LocalDate end = LocalDate.parse(endDate);
-
-        List<StackOverflowThread> filteredThreads = allThreads.stream()
-                .filter(thread -> {
-                    if (thread.getQuestion() == null || thread.getQuestion().getCreationDate() == null) {
-                        return false;
-                    }
-                    // filter keywords (topics)
-                    if (keywords.stream().noneMatch(keyword -> thread.getQuestion().getTags().contains(keyword)))
-                        return false;
-
-                    LocalDate creationDate = Instant.ofEpochSecond(thread.getQuestion().getCreationDate())
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate();
-                    if (!creationDate.isBefore(start) && !creationDate.isAfter(end)) {
-                        logger.info(String.valueOf(creationDate));
-                        return true;
-                    }
-                    return false;
-                })
-                .collect(Collectors.toList());
-
-        logger.info("Threads filtered: {}", filteredThreads.size());
-
+        List<StackOverflowThread> filteredThreads = filterTopicAndDate(
+                allThreads, topics, startDate, endDate
+        );
 
         Map<String, List<Map<String, Object>>> topicTrends = new LinkedHashMap<>();
 
@@ -124,6 +96,42 @@ public class TopicAnalysisService {
         return result;
     }
 
+    private List<StackOverflowThread> filterTopicAndDate(
+            List<StackOverflowThread> allThreads,
+            List<String> topics, String startDate, String endDate){
+        List<String> keywords =
+                topics.stream()
+                        .flatMap(t -> TOPIC_KEYWORDS.getOrDefault(t, List.of()).stream())
+                        .distinct()
+                        .toList();
+
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        List<StackOverflowThread> filteredThreads = allThreads.stream()
+                .filter(thread -> {
+                    if (thread.getQuestion() == null || thread.getQuestion().getCreationDate() == null) {
+                        return false;
+                    }
+                    // filter keywords (topics)
+                    if (keywords.stream().noneMatch(keyword -> thread.getQuestion().getTags().contains(keyword)))
+                        return false;
+
+                    LocalDate creationDate = Instant.ofEpochSecond(thread.getQuestion().getCreationDate())
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+                    if (!creationDate.isBefore(start) && !creationDate.isAfter(end)) {
+                        logger.info(String.valueOf(creationDate));
+                        return true;
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
+
+        logger.info("Threads filtered: {}", filteredThreads.size());
+        return filteredThreads;
+    }
+
     private String formatTimePeriod(LocalDate date, String period) {
         if (period == null || period.isBlank()) {
             period = "month";
@@ -150,50 +158,120 @@ public class TopicAnalysisService {
         return new ArrayList<>(TOPIC_KEYWORDS.keySet());
     }
 
-    public List<TopicActivity> getTopicActivityRanking(String startDate, String endDate) {
+    public Map<String, Object> getTopicActivityScore(
+            List<String> topics, String startDate, String endDate, String period) {
+
         List<StackOverflowThread> allThreads = dataLoaderService.getAllThreads();
 
-        LocalDate start = LocalDate.parse(startDate);
-        LocalDate end = LocalDate.parse(endDate);
+        List<StackOverflowThread> filteredThreads = filterTopicAndDate(
+                allThreads, topics, startDate, endDate
+        );
+        
+        Map<String, List<Map<String, Object>>> topicActivityScore = new LinkedHashMap<>();
 
-        return null;
-    }
-    public static class TopicActivity {
-        private String topic;
-        private int questionCount;
-        private int answerCount;
-        private int totalViews;
-        private int totalScore;
-        private double averageAnswersPerQuestion;
-        private double averageViewsPerQuestion;
-        private double averageScore;
+        for (String topic : topics) {
+            // 当前 topic 对应的 keywords
+            List<String> topicKeywords = TOPIC_KEYWORDS.getOrDefault(topic, List.of());
 
-        public TopicActivity(String topic) {
-            this.topic = topic;
-        }
+            // 找到属于这个 topic 的 threads
+            List<StackOverflowThread> topicThreads = filteredThreads.stream()
+                    .filter(thread -> {
+                        List<String> tags = thread.getQuestion().getTags();
+                        return topicKeywords.stream().anyMatch(tags::contains);
+                    })
+                    .toList();
 
-        public void calculateMetrics() {
-            if (questionCount > 0) {
-                this.averageAnswersPerQuestion = (double) answerCount / questionCount;
-                this.averageViewsPerQuestion = (double) totalViews / questionCount;
-                this.averageScore = (double) totalScore / questionCount;
+            // 按 period 分桶计算活跃度分数：bucketKey -> activityScore
+            Map<String, Double> bucketActivityScore = new TreeMap<>();
+
+            for (StackOverflowThread thread : topicThreads) {
+                Question question = thread.getQuestion();
+
+                // 1. 处理 Question 的活跃度（权重 1.0）
+                if (question != null && question.getCreationDate() != null) {
+                    LocalDate qDate = Instant.ofEpochSecond(question.getCreationDate())
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+                    String qPeriod = formatTimePeriod(qDate, period);
+                    int qScore = question.getScore() != null ? question.getScore() : 0;
+                    
+                    bucketActivityScore.merge(qPeriod, 1.0 * ReLU(qScore), Double::sum);
+                }
+
+                // 2. 处理 Answers 的活跃度（权重 0.8）
+                if (thread.getAnswers() != null) {
+                    for (var answer : thread.getAnswers()) {
+                        if (answer.getCreationDate() != null) {
+                            LocalDate aDate = Instant.ofEpochSecond(answer.getCreationDate())
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate();
+                            String aPeriod = formatTimePeriod(aDate, period);
+                            int aScore = answer.getScore() != null ? answer.getScore() : 0;
+                            
+                            bucketActivityScore.merge(aPeriod, 0.8 * ReLU(aScore), Double::sum);
+                        }
+                    }
+                }
+
+                // 3. 处理 Question Comments 的活跃度（权重 0.5）
+                if (thread.getQuestionComments() != null) {
+                    for (var comment : thread.getQuestionComments()) {
+                        if (comment.getCreationDate() != null) {
+                            LocalDate cDate = Instant.ofEpochSecond(comment.getCreationDate())
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate();
+                            String cPeriod = formatTimePeriod(cDate, period);
+                            int cScore = comment.getScore() != null ? comment.getScore() : 0;
+                            
+                            bucketActivityScore.merge(cPeriod, 0.5 * ReLU(cScore), Double::sum);
+                        }
+                    }
+                }
+
+                // 4. 处理 Answer Comments 的活跃度（权重 0.5）
+                if (thread.getAnswerComments() != null) {
+                    for (var commentList : thread.getAnswerComments().values()) {
+                        if (commentList != null) {
+                            for (var comment : commentList) {
+                                if (comment.getCreationDate() != null) {
+                                    LocalDate cDate = Instant.ofEpochSecond(comment.getCreationDate())
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalDate();
+                                    String cPeriod = formatTimePeriod(cDate, period);
+                                    int cScore = comment.getScore() != null ? comment.getScore() : 0;
+                                    
+                                    bucketActivityScore.merge(cPeriod, 0.5 * ReLU(cScore), Double::sum);
+                                }
+                            }
+                        }
+                    }
+                }
             }
+
+            // 把 Map<String, Double> 转成 List<{"period":..., "activityScore":...}>
+            List<Map<String, Object>> series = bucketActivityScore.entrySet().stream()
+                    .map(e -> {
+                        Map<String, Object> point = new LinkedHashMap<>();
+                        point.put("period", e.getKey());
+                        point.put("activityScore", Math.round(e.getValue() * 100.0) / 100.0); // 保留两位小数
+                        return point;
+                    })
+                    .toList();
+
+            topicActivityScore.put(topic, series);
         }
 
-        // Getters
-        public String getTopic() { return topic; }
-        public int getQuestionCount() { return questionCount; }
-        public int getAnswerCount() { return answerCount; }
-        public int getTotalViews() { return totalViews; }
-        public double getAverageAnswersPerQuestion() {
-            return Math.round(averageAnswersPerQuestion * 100.0) / 100.0;
-        }
-        public double getAverageViewsPerQuestion() {
-            return Math.round(averageViewsPerQuestion * 100.0) / 100.0;
-        }
-        public double getAverageScore() {
-            return Math.round(averageScore * 100.0) / 100.0;
-        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("period", period.toLowerCase());
+        result.put("dateRange", Map.of("start", startDate, "end", endDate));
+        result.put("totalThreads", filteredThreads.size());
+        result.put("topicActivityScore", topicActivityScore);
+
+        return result;
+    }
+
+    private int ReLU(int score) {
+        return Math.max(0, score);
     }
 
 }
