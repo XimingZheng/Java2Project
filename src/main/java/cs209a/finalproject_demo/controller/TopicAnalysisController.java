@@ -36,9 +36,6 @@ public class TopicAnalysisController {
         return ResponseEntity.ok(topicAnalysisService.getAvailableTopics());
     }
 
-    /**
-     * 获取主题活动度排名
-     */
     @GetMapping("/activity")
     public ResponseEntity<Map<String, Object>> getTopicActivity(
             @RequestParam List<String> topics,
