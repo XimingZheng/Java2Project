@@ -1,44 +1,48 @@
 package cs209a.finalproject_demo.config;
 
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
 import java.util.*;
 
+@Component
 public class TopicKeywords {
 
-    public static final Map<String, List<String>> TOPIC_KEYWORDS = new LinkedHashMap<>();
+    private final Map<String, List<String>> topicKeywords = new LinkedHashMap<>();
 
-    static {
+    public TopicKeywords() {
         // Generics
-        TOPIC_KEYWORDS.put("generics", Arrays.asList(
+        topicKeywords.put("generics", Arrays.asList(
                 "generic", "type-parameter", "wildcard", "bounded-types",
                 "type-erasure", "parameterized-type", "covariance", "contravariance"
         ));
 
         // Collections
-        TOPIC_KEYWORDS.put("collections", Arrays.asList(
+        topicKeywords.put("collections", Arrays.asList(
                 "collection", "list", "arraylist",
                 "map", "hashmap", "concurrenthashmap",
                 "set", "hashset", "queue", "iterator"
         ));
 
         // I/O
-        TOPIC_KEYWORDS.put("io", Arrays.asList(
+        topicKeywords.put("io", Arrays.asList(
                 "java-io", "inputstream", "outputstream", "reader", "writer",
                 "file-io", "nio", "serialization", "serializable", "path", "files"
         ));
 
         // Lambda
-        TOPIC_KEYWORDS.put("lambda", Arrays.asList(
+        topicKeywords.put("lambda", Arrays.asList(
                 "lambda", "stream-api", "functional-interface", "functional-programming",
                 "method-reference", "optional", "collectors", "java-8", "completable-future"
         ));
 
         // Multithreading & Concurrency
-        TOPIC_KEYWORDS.put("multithreading", Arrays.asList("thread", "multithreading", "concurrency",
+        topicKeywords.put("multithreading", Arrays.asList("thread", "multithreading", "concurrency",
                 "synchronized", "executor", "parallel-processing",
                 "race condition", "deadlock", "thread-safe"));
 
         // Socket
-        TOPIC_KEYWORDS.put("socket", Arrays.asList(
+        topicKeywords.put("socket", Arrays.asList(
                 "socket", "sockets", "serversocket", "networking",
                 "network", "tcp", "udp", "http", "https",
                 "websocket", "port",
@@ -46,14 +50,14 @@ public class TopicKeywords {
         ));
 
         // Reflection
-        TOPIC_KEYWORDS.put("reflection", Arrays.asList(
+        topicKeywords.put("reflection", Arrays.asList(
                 "reflection", "reflect", "class.forname",
                 "method.invoke", "method", "field",
                 "constructor", "proxy", "annotation"
         ));
 
         // Spring Boot
-        TOPIC_KEYWORDS.put("spring-boot", Arrays.asList(
+        topicKeywords.put("spring-boot", Arrays.asList(
                 "spring-boot", "springboot",
                 "spring-mvc", "spring-data", "spring-jpa",
                 "spring-security", "spring-rest", "restcontroller",
@@ -63,43 +67,43 @@ public class TopicKeywords {
         ));
 
         // Maven
-        TOPIC_KEYWORDS.put("maven", Arrays.asList(
+        topicKeywords.put("maven", Arrays.asList(
                 "maven", "pom.xml", "mvn", "build-tool",
                 "dependency-management", "plugins", "repository", "artifact"
         ));
 
         // JUnit & Testing
-        TOPIC_KEYWORDS.put("testing", Arrays.asList(
+        topicKeywords.put("testing", Arrays.asList(
                 "junit", "unit-testing", "integration-testing",
                 "mockito", "mock", "test-driven-development",
                 "assertion", "test-coverage"
         ));
 
         // Exception Handling
-        TOPIC_KEYWORDS.put("exceptions", Arrays.asList(
+        topicKeywords.put("exceptions", Arrays.asList(
                 "exception", "try-catch", "throw", "throws",
                 "stack-trace", "runtimeexception", "checked-exception",
                 "error-handling", "custom-exception"
         ));
 
         // JDBC & Database
-        TOPIC_KEYWORDS.put("database", Arrays.asList(
+        topicKeywords.put("database", Arrays.asList(
                 "jdbc", "sql", "database", "mysql", "postgresql", "oracle",
                 "connection", "preparedstatement", "resultset",
                 "transaction", "datasource"
         ));
     }
 
-    public static Map<String, List<String>> getTopicKeywords() {
-        return new LinkedHashMap<>(TOPIC_KEYWORDS);
+    public Map<String, List<String>> getTopicKeywords() {
+        return new LinkedHashMap<>(topicKeywords);
     }
 
-    public static List<String> getAllTopics() {
-        return new ArrayList<>(TOPIC_KEYWORDS.keySet());
+    public List<String> getAllTopics() {
+        return new ArrayList<>(topicKeywords.keySet());
     }
 
-    public static List<String> getKeywordsForTopic(String topic) {
-        return TOPIC_KEYWORDS.getOrDefault(topic, Collections.emptyList());
+    public List<String> getKeywordsForTopic(String topic) {
+        return topicKeywords.getOrDefault(topic, Collections.emptyList());
     }
 
     /**
@@ -107,13 +111,13 @@ public class TopicKeywords {
      * @param tag Stack Overflow 标签
      * @return 对应的主题名称，如果不属于任何主题则返回 null
      */
-    public static String mapTagToTopic(String tag) {
+    public String mapTagToTopic(String tag) {
         if (tag == null || tag.isEmpty()) {
             return null;
         }
 
         String lowerTag = tag.toLowerCase();
-        for (Map.Entry<String, List<String>> entry : TOPIC_KEYWORDS.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : topicKeywords.entrySet()) {
             if (entry.getValue().stream()
                     .anyMatch(keyword -> lowerTag.contains(keyword.toLowerCase()))) {
                 return entry.getKey();
