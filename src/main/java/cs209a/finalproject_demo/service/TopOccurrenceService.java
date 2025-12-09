@@ -1,5 +1,6 @@
 package cs209a.finalproject_demo.service;
 
+import cs209a.finalproject_demo.config.TopicKeywords;
 import cs209a.finalproject_demo.model.StackOverflowThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,21 +27,41 @@ public class TopOccurrenceService {
         Map<String, Integer> coOccurrenceMap = new HashMap<>();
 
         for (StackOverflowThread thread : allThreads) {
-            if (thread.getQuestion() == null || thread.getQuestion().getTags() == null) {
+            if (thread.getQuestion() == null) {
                 continue;
             }
             
-            List<String> tags = thread.getQuestion().getTags().stream()
-                    .distinct()
-                    .collect(Collectors.toList());
+            Set<String> topics = new HashSet<>();
+            
+            if (thread.getQuestion().getTags() != null) {
+                List<String> tags = thread.getQuestion().getTags().stream()
+                        .distinct()
+                        .collect(Collectors.toList());
+                
+                tags.stream()
+                        .map(TopicKeywords::mapTagToTopic)
+                        .filter(Objects::nonNull)
+                        .forEach(topics::add);
+            }
+            
+            if (thread.getQuestion().getTitle() != null) {
+                String title = thread.getQuestion().getTitle().toLowerCase();
+                for (String topic : TopicKeywords.getAllTopics()) {
+                    List<String> keywords = TopicKeywords.getKeywordsForTopic(topic);
+                    if (keywords.stream().anyMatch(keyword -> title.contains(keyword.toLowerCase()))) {
+                        topics.add(topic);
+                    }
+                }
+            }
+            
+            List<String> topicList = new ArrayList<>(topics);
 
-            for (int i = 0; i < tags.size(); i++) {
-                for (int j = i + 1; j < tags.size(); j++) {
-                    String tag1 = tags.get(i);
-                    String tag2 = tags.get(j);
-                    if (tag1.equals(tag2) || tag1.equals("java") || tag2.equals("java")) continue;
-
-                    String key = tag1.compareTo(tag2) < 0 ? tag1 + "," + tag2 : tag2 + "," + tag1;
+            for (int i = 0; i < topicList.size(); i++) {
+                for (int j = i + 1; j < topicList.size(); j++) {
+                    String topic1 = topicList.get(i);
+                    String topic2 = topicList.get(j);
+                    
+                    String key = topic1.compareTo(topic2) < 0 ? topic1 + "," + topic2 : topic2 + "," + topic1;
 
                     coOccurrenceMap.put(key, coOccurrenceMap.getOrDefault(key, 0) + 1);
                 }
@@ -51,12 +72,12 @@ public class TopOccurrenceService {
                 .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
                 .limit(n)
                 .map(entry -> {
-                    String[] tags = entry.getKey().split(",");
-                    return new CoOccurrencePair(tags[0], tags[1], entry.getValue());
+                    String[] topics = entry.getKey().split(",");
+                    return new CoOccurrencePair(topics[0], topics[1], entry.getValue());
                 })
                 .collect(Collectors.toList());
 
-        logger.info("Found {} co-occurrence pairs", topPairs.size());
+        logger.info("Found {} topic co-occurrence pairs", topPairs.size());
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("totalPairs", coOccurrenceMap.size());
@@ -68,21 +89,21 @@ public class TopOccurrenceService {
 
     // DTO 类用于JSON序列化
     public static class CoOccurrencePair {
-        private String tag1;
-        private String tag2;
+        private String topic1;
+        private String topic2;
         private int count;
 
-        public CoOccurrencePair(String tag1, String tag2, int count) {
-            this.tag1 = tag1;
-            this.tag2 = tag2;
+        public CoOccurrencePair(String topic1, String topic2, int count) {
+            this.topic1 = topic1;
+            this.topic2 = topic2;
             this.count = count;
         }
 
-        public String getTag1() { return tag1; }
-        public void setTag1(String tag1) { this.tag1 = tag1; }
+        public String getTopic1() { return topic1; }
+        public void setTopic1(String topic1) { this.topic1 = topic1; }
 
-        public String getTag2() { return tag2; }
-        public void setTag2(String tag2) { this.tag2 = tag2; }
+        public String getTopic2() { return topic2; }
+        public void setTopic2(String topic2) { this.topic2 = topic2; }
 
         public int getCount() { return count; }
         public void setCount(int count) { this.count = count; }

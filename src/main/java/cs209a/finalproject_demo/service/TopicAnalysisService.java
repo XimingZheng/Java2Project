@@ -1,5 +1,6 @@
 package cs209a.finalproject_demo.service;
 
+import cs209a.finalproject_demo.config.TopicKeywords;
 import cs209a.finalproject_demo.model.Question;
 import cs209a.finalproject_demo.model.StackOverflowThread;
 import org.slf4j.Logger;
@@ -12,25 +13,14 @@ import java.time.ZoneId;
 import java.time.temporal.IsoFields;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static cs209a.finalproject_demo.config.TopicKeywords.TOPIC_KEYWORDS;
+
 @Service
 public class TopicAnalysisService {
     private static final Logger logger = LoggerFactory.getLogger(TopicAnalysisService.class);
 
     private final DataLoaderService dataLoaderService;
-
-    private static final Map<String, List<String>> TOPIC_KEYWORDS = new HashMap<>();
-
-    static {
-        TOPIC_KEYWORDS.put("java", Arrays.asList("java"));
-        TOPIC_KEYWORDS.put("generics", Arrays.asList("generic", "generics", "type-parameter"));
-        TOPIC_KEYWORDS.put("collections", Arrays.asList("collection", "list", "map", "set", "arraylist", "hashmap"));
-        TOPIC_KEYWORDS.put("io", Arrays.asList("io", "inputstream", "outputstream", "file", "nio"));
-        TOPIC_KEYWORDS.put("lambda", Arrays.asList("lambda", "stream", "functional-interface", "method-reference"));
-        TOPIC_KEYWORDS.put("multithreading", Arrays.asList("thread", "multithreading", "concurrency", "synchronized", "executor"));
-        TOPIC_KEYWORDS.put("socket", Arrays.asList("socket", "serversocket", "network", "tcp", "udp"));
-        TOPIC_KEYWORDS.put("reflection", Arrays.asList("reflection", "class.forname", "method.invoke"));
-        TOPIC_KEYWORDS.put("spring-boot", Arrays.asList("spring-boot", "spring", "springboot"));
-    }
 
     public TopicAnalysisService(DataLoaderService dataLoaderService) {
         this.dataLoaderService = dataLoaderService;
@@ -101,7 +91,7 @@ public class TopicAnalysisService {
             List<String> topics, String startDate, String endDate){
         List<String> keywords =
                 topics.stream()
-                        .flatMap(t -> TOPIC_KEYWORDS.getOrDefault(t, List.of()).stream())
+                        .flatMap(t -> TopicKeywords.getKeywordsForTopic(t).stream())
                         .distinct()
                         .toList();
 
@@ -155,7 +145,7 @@ public class TopicAnalysisService {
     }
 
     public List<String> getAvailableTopics() {
-        return new ArrayList<>(TOPIC_KEYWORDS.keySet());
+        return TopicKeywords.getAllTopics();
     }
 
     public Map<String, Object> getTopicActivityScore(
@@ -171,7 +161,7 @@ public class TopicAnalysisService {
 
         for (String topic : topics) {
             // 当前 topic 对应的 keywords
-            List<String> topicKeywords = TOPIC_KEYWORDS.getOrDefault(topic, List.of());
+            List<String> topicKeywords = TopicKeywords.getKeywordsForTopic(topic);
 
             // 找到属于这个 topic 的 threads
             List<StackOverflowThread> topicThreads = filteredThreads.stream()
