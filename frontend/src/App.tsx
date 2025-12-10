@@ -114,7 +114,7 @@ function App() {
       <header className="bg-stackoverflow-black text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-6 text-center">
           <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
-            <span className="text-stackoverflow-orange">📊</span>
+            <span className="text-stackoverflow-orange"></span>
             Stack Overflow Analysis
           </h1>
           <p className="text-gray-300 mt-2">
