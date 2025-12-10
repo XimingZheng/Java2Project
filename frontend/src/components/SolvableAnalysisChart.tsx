@@ -72,8 +72,8 @@ const SolvableAnalysisChart: React.FC<SolvableAnalysisChartProps> = ({ data }) =
     },
     {
       factor: 'Question Length',
-      solvable: Math.min(100, (data.questionLengthAnalysis.solvableAvgWords || 0) / 2),
-      notSolvable: Math.min(100, (data.questionLengthAnalysis.notSolvableAvgWords || 0) / 2),
+      solvable: Math.min(100, (data.questionLengthAnalysis.solvableAvgWords || 0) / 4),
+      notSolvable: Math.min(100, (data.questionLengthAnalysis.notSolvableAvgWords || 0) / 4),
     },
     {
       factor: 'Code Snippets',
@@ -89,6 +89,11 @@ const SolvableAnalysisChart: React.FC<SolvableAnalysisChartProps> = ({ data }) =
       factor: 'Question Score',
       solvable: Math.min(100, Math.max(0, (data.questionScoreAnalysis.solvableAvgScore || 0) * 10 + 50)),
       notSolvable: Math.min(100, Math.max(0, (data.questionScoreAnalysis.notSolvableAvgScore || 0) * 10 + 50)),
+    },
+    {
+      factor: 'View Count',
+      solvable: Math.min(100, (data.viewCountAnalysis.solvableAvgViews || 0) * 0.5),
+      notSolvable: Math.min(100, (data.viewCountAnalysis.notSolvableAvgViews || 0) * 0.5),
     },
   ];
 
@@ -239,7 +244,6 @@ const SolvableAnalysisChart: React.FC<SolvableAnalysisChartProps> = ({ data }) =
               <Bar dataKey="notSolvable" name="Hard-to-Solve" fill="#FF6B6B" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-gray-500 mt-2">* View Count is scaled by 1/100 for visualization</p>
         </div>
       </div>
 
