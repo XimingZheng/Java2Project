@@ -19,12 +19,12 @@ Analyzes Java-tagged Stack Overflow threads to surface topic trends, co-occurren
 Raw Stack Overflow data is fetched via `python/data_collection.py`, enriched into JSON models, and loaded into in-memory services. Analysis services compute time-series trends, co-occurrence rankings, solvable ratios, and multithreading recurrences exposed through REST endpoints consumed by the frontend.
 
 ## RESTful API Endpoints
-- `GET /api/topics/list` ！ available topics.
-- `GET /api/topics/trend?topics=java,spring&startDate=2022-01-01&endDate=2024-12-31&period=month` ！ topic frequency trends.
-- `GET /api/topics/activity?topics=java,spring&startDate=2022-01-01&endDate=2024-12-31&period=month` ！ activity scores across time.
-- `GET /api/occurrence/top?n=10` ！ top co-occurring tags/keywords.
-- `GET /api/multithreading/top?n=5` ！ most frequent multithreading issues.
-- `GET /api/solvable` ！ solvable vs. unsolved analysis summary.
+- `GET /api/topics/list` - available topics.
+- `GET /api/topics/trend?topics=java,spring&startDate=2022-01-01&endDate=2024-12-31&period=month` - topic frequency trends.
+- `GET /api/topics/activity?topics=java,spring&startDate=2022-01-01&endDate=2024-12-31&period=month` - activity scores across time.
+- `GET /api/occurrence/top?n=10` - top co-occurring tags/keywords.
+- `GET /api/multithreading/top?n=5` - most frequent multithreading issues.
+- `GET /api/solvable` - solvable vs. unsolved analysis summary.
 
 ## Frontend and Visualization
 The `frontend/` app (Vite) consumes the above APIs, rendering line charts, radar charts, and tables. Static assets live in `frontend/public`, source in `frontend/src`. Use `npm run dev -- --host` for local previews; `npm run build` for production bundles.
