@@ -15,6 +15,16 @@ public class StackOverflowThread {
     @JsonProperty("answer_comments")
     private Map<String, List<Comment>> answerComments;
 
+    public boolean notSolvable () {
+        return !isSolvable();
+    }
+    public boolean isSolvable () {
+        if (this.getAnswers() == null) return false;
+        for (Answer answer : this.getAnswers()) {
+            if (answer.getIsAccepted()) return true;
+        }
+        return false;
+    }
     // Getters and Setters
     public Question getQuestion() { return question; }
     public void setQuestion(Question question) { this.question = question; }
