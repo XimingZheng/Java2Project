@@ -11,15 +11,13 @@ public class PatternMatchingConfig {
     public static class PitfallPattern {
         public String normalizedName; // e.g., "resource_exhaustion"
         public String category;       // e.g., "ROOT_CAUSE"
-        public List<Pattern> regexes;
+        public Pattern compiledPattern;
 
         public PitfallPattern(String normalizedName, String category, List<String> regexStrings) {
             this.normalizedName = normalizedName;
             this.category = category;
-            this.regexes = new ArrayList<>();
-            for (String regex : regexStrings) {
-                this.regexes.add(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
-            }
+            String combinedRegex = String.join("|", regexStrings);
+            this.compiledPattern = Pattern.compile(combinedRegex, Pattern.CASE_INSENSITIVE);
         }
     }
 
@@ -296,11 +294,7 @@ public class PatternMatchingConfig {
         // === SYMPTOM: 性能问题与高延迟 (Performance & Latency) ===
         patterns.add(new PitfallPattern(
                 "performance_issue", "SYMPTOM", Arrays.asList(
-                "high latency", "response time",
-                "bottleneck",
-
-                "too slow",
-                "very slow",
+                "high latency", "bottleneck",
                 "taking long time",
                 "runs long",
 
@@ -308,13 +302,11 @@ public class PatternMatchingConfig {
                 "jitter",
 
                 "high cpu", "cpu usage",
-                "gc pressure", "garbage collection", "stop-the-world",
-                "low rate"
+                "gc pressure", "garbage collection", "stop-the-world"
         )
         ));
 
         // === 5. EXCEPTION: 具体异常类 ===
-        // 算法逻辑：精确匹配 Java 异常类名
         patterns.add(new PitfallPattern("InterruptedException", "EXCEPTION", Arrays.asList("InterruptedException")));
         patterns.add(new PitfallPattern("IOException", "EXCEPTION", Arrays.asList("IOException")));
         patterns.add(new PitfallPattern("ConcurrentModificationException", "EXCEPTION", Arrays.asList("ConcurrentModificationException")));

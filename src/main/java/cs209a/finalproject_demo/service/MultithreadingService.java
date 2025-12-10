@@ -2,7 +2,7 @@ package cs209a.finalproject_demo.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cs209a.finalproject_demo.config.PatternMatchingConfig;
-import cs209a.finalproject_demo.config.TopicKeywords;
+import cs209a.finalproject_demo.config.TopicKeywordsConfig;
 import cs209a.finalproject_demo.model.Answer;
 import cs209a.finalproject_demo.model.Question;
 import cs209a.finalproject_demo.model.StackOverflowThread;
@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -21,14 +24,14 @@ public class MultithreadingService {
     private static final Logger logger = LoggerFactory.getLogger(MultithreadingService.class);
     private final PatternMatchingConfig patternMatchingConfig;
     private final DataLoaderService dataLoaderService;
-    private final TopicKeywords topicKeywords;
+    private final TopicKeywordsConfig topicKeywordsConfig;
     private final List<String> keywords;
 
     public MultithreadingService(DataLoaderService dataLoaderService,
-                                 TopicKeywords topicKeywords, PatternMatchingConfig patternMatchingConfig) {
+                                 TopicKeywordsConfig topicKeywordsConfig, PatternMatchingConfig patternMatchingConfig) {
         this.dataLoaderService = dataLoaderService;
-        this.topicKeywords = topicKeywords;
-        this.keywords = topicKeywords.getKeywordsForTopic("multithreading");
+        this.topicKeywordsConfig = topicKeywordsConfig;
+        this.keywords = topicKeywordsConfig.getKeywordsForTopic("multithreading");
         this.patternMatchingConfig = patternMatchingConfig;
     }
 
@@ -46,50 +49,40 @@ public class MultithreadingService {
 
         logger.info("Filtered {} threads with multithreading keywords", filteredThreads.size());
 
-        // 2. 获取所有的 PitfallPattern
         List<PatternMatchingConfig.PitfallPattern> pitfallPatterns = patternMatchingConfig.concurrencyPatterns();
-        
-        // 3. 统计每种 pattern 出现的次数
-        Map<String, Integer> patternCounts = new HashMap<>();
+
+        Map<String, LongAdder> patternCounts = new ConcurrentHashMap<>();
         Map<String, String> patternCategories = new HashMap<>();
         
-        // 初始化计数器
         for (PatternMatchingConfig.PitfallPattern pattern : pitfallPatterns) {
-            patternCounts.put(pattern.normalizedName, 0);
+            patternCounts.put(pattern.normalizedName, new LongAdder());
             patternCategories.put(pattern.normalizedName, pattern.category);
         }
-        
-        // 4. 遍历每个筛选出的线程,检查是否匹配任何 pattern
-        for (StackOverflowThread thread : filteredThreads) {
-            Set<String> matchedPatterns = new HashSet<>();
-            
-            // 提取线程中的所有文本内容
+
+        filteredThreads.parallelStream().forEach(thread -> {
+
             List<String> texts = extractAllTexts(thread);
-            
-            // 对每个文本内容检查是否匹配 pattern
+
+            Set<String> matchedInThisThread = new HashSet<>();
+
             for (String text : texts) {
                 if (text == null || text.isEmpty()) continue;
-                
-                String lowerText = text.toLowerCase();
-                
+
                 for (PatternMatchingConfig.PitfallPattern pattern : pitfallPatterns) {
-                    // 检查是否匹配该 pattern 的任何正则表达式
-                    for (Pattern regex : pattern.regexes) {
-                        if (regex.matcher(lowerText).find()) {
-                            matchedPatterns.add(pattern.normalizedName);
-                        }
+                    if (pattern.compiledPattern.matcher(text).find()) {
+                        matchedInThisThread.add(pattern.normalizedName);
                     }
                 }
             }
-            
-            for (String patternName : matchedPatterns) {
-                patternCounts.put(patternName, patternCounts.get(patternName) + 1);
+
+            for (String patternName : matchedInThisThread) {
+                patternCounts.get(patternName).increment();
             }
-        }
+        });
         
         List<Map<String, Object>> topProblems = patternCounts.entrySet().stream()
-                .filter(entry -> entry.getValue() > 0) // 只保留出现过的
-                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue())) // 降序排序
+                .filter(entry -> entry.getValue().sum() > 0)
+                .sorted((e1, e2) -> Long.compare(e2.getValue().sum(), e1.getValue().sum()))
                 .limit(n)
                 .map(entry -> {
                     Map<String, Object> problem = new HashMap<>();

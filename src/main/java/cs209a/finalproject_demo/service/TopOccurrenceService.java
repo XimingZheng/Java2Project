@@ -1,6 +1,6 @@
 package cs209a.finalproject_demo.service;
 
-import cs209a.finalproject_demo.config.TopicKeywords;
+import cs209a.finalproject_demo.config.TopicKeywordsConfig;
 import cs209a.finalproject_demo.model.StackOverflowThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +14,11 @@ public class TopOccurrenceService {
     private static final Logger logger = LoggerFactory.getLogger(TopOccurrenceService.class);
 
     private final DataLoaderService dataLoaderService;
-    private final TopicKeywords topicKeywords;
+    private final TopicKeywordsConfig topicKeywordsConfig;
 
-    public TopOccurrenceService(DataLoaderService dataLoaderService, TopicKeywords topicKeywords) {
+    public TopOccurrenceService(DataLoaderService dataLoaderService, TopicKeywordsConfig topicKeywordsConfig) {
         this.dataLoaderService = dataLoaderService;
-        this.topicKeywords = topicKeywords;
+        this.topicKeywordsConfig = topicKeywordsConfig;
     }
 
     public Map<String, Object> getTopOccurrence(int n) {
@@ -41,15 +41,15 @@ public class TopOccurrenceService {
                         .collect(Collectors.toList());
                 
                 tags.stream()
-                        .map(topicKeywords::mapTagToTopic)
+                        .map(topicKeywordsConfig::mapTagToTopic)
                         .filter(Objects::nonNull)
                         .forEach(topics::add);
             }
             
             if (thread.getQuestion().getTitle() != null) {
                 String title = thread.getQuestion().getTitle().toLowerCase();
-                for (String topic : topicKeywords.getAllTopics()) {
-                    List<String> keywords = topicKeywords.getKeywordsForTopic(topic);
+                for (String topic : topicKeywordsConfig.getAllTopics()) {
+                    List<String> keywords = topicKeywordsConfig.getKeywordsForTopic(topic);
                     if (keywords.stream().anyMatch(keyword -> title.contains(keyword.toLowerCase()))) {
                         topics.add(topic);
                     }

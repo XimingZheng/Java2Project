@@ -1,6 +1,6 @@
 package cs209a.finalproject_demo.service;
 
-import cs209a.finalproject_demo.config.TopicKeywords;
+import cs209a.finalproject_demo.config.TopicKeywordsConfig;
 import cs209a.finalproject_demo.model.Question;
 import cs209a.finalproject_demo.model.StackOverflowThread;
 import org.slf4j.Logger;
@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
 public class TopicAnalysisService {
     private static final Logger logger = LoggerFactory.getLogger(TopicAnalysisService.class);
     private final DataLoaderService dataLoaderService;
-    private final TopicKeywords topicKeywords;
+    private final TopicKeywordsConfig topicKeywordsConfig;
 
-    public TopicAnalysisService(DataLoaderService dataLoaderService, TopicKeywords topicKeywords) {
+    public TopicAnalysisService(DataLoaderService dataLoaderService, TopicKeywordsConfig topicKeywordsConfig) {
         this.dataLoaderService = dataLoaderService;
-        this.topicKeywords = topicKeywords;
+        this.topicKeywordsConfig = topicKeywordsConfig;
     }
 
     public Map<String, Object> getTopicTrends(List<String> topics, String startDate, String endDate, String period) {
@@ -39,7 +39,7 @@ public class TopicAnalysisService {
 
         for (String topic : topics) {
             // 当前 topic 对应的 keywords
-            List<String> keywords = topicKeywords.getKeywordsForTopic(topic);
+            List<String> keywords = topicKeywordsConfig.getKeywordsForTopic(topic);
 
             // 3.1 先找到属于这个 topic 的 threads（在 filteredThreads 里再细分一次）
             List<StackOverflowThread> topicThreads = filteredThreads.stream()
@@ -90,7 +90,7 @@ public class TopicAnalysisService {
             List<String> topics, String startDate, String endDate){
         List<String> keywords =
                 topics.stream()
-                        .flatMap(t -> topicKeywords.getKeywordsForTopic(t).stream())
+                        .flatMap(t -> topicKeywordsConfig.getKeywordsForTopic(t).stream())
                         .distinct()
                         .toList();
 
@@ -144,7 +144,7 @@ public class TopicAnalysisService {
     }
 
     public List<String> getAvailableTopics() {
-        return topicKeywords.getAllTopics();
+        return topicKeywordsConfig.getAllTopics();
     }
 
     public Map<String, Object> getTopicActivityScore(
@@ -160,7 +160,7 @@ public class TopicAnalysisService {
 
         for (String topic : topics) {
             // 当前 topic 对应的 keywords
-            List<String> keywords = topicKeywords.getKeywordsForTopic(topic);
+            List<String> keywords = topicKeywordsConfig.getKeywordsForTopic(topic);
 
             // 找到属于这个 topic 的 threads
             List<StackOverflowThread> topicThreads = filteredThreads.stream()

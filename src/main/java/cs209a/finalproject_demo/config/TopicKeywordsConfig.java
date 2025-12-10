@@ -1,16 +1,15 @@
 package cs209a.finalproject_demo.config;
 
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 @Component
-public class TopicKeywords {
+public class TopicKeywordsConfig {
 
     private final Map<String, List<String>> topicKeywords = new LinkedHashMap<>();
 
-    public TopicKeywords() {
+    public TopicKeywordsConfig() {
         // Generics
         topicKeywords.put("generics", Arrays.asList(
                 "generic", "type-parameter", "wildcard", "bounded-types",
