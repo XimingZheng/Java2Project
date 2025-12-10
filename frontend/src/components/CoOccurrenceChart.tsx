@@ -69,10 +69,10 @@ const CoOccurrenceChart: React.FC<CoOccurrenceChartProps> = ({ data }) => {
         </p>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={600}>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+          margin={{ top: 70, right: 30, left: 20, bottom: 70 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
           <XAxis
@@ -98,7 +98,7 @@ const CoOccurrenceChart: React.FC<CoOccurrenceChartProps> = ({ data }) => {
       </ResponsiveContainer>
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h4 className="font-semibold text-blue-900 mb-2">💡 Insights</h4>
+        <h4 className="font-semibold text-blue-900 mb-2">Insights</h4>
         <p className="text-sm text-blue-800">
           Topic co-occurrences reveal cross-cutting challenges that developers face when combining multiple technologies.
           Higher co-occurrence counts indicate common problem areas that require expertise in both topics.

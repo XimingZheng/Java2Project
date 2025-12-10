@@ -3,7 +3,8 @@ import type {
   TopicTrendResponse, 
   TopicActivityResponse, 
   CoOccurrenceResponse, 
-  MultithreadingResponse 
+  MultithreadingResponse,
+  SolvableAnalysisResponse
 } from '../types/api';
 
 const api = axios.create({
@@ -68,6 +69,14 @@ export const multithreadingApi = {
     const response = await api.get<MultithreadingResponse>('/multithreading/top', {
       params: { n },
     });
+    return response.data;
+  },
+};
+
+// Solvable Analysis API
+export const solvableAnalysisApi = {
+  getAnalysis: async (): Promise<SolvableAnalysisResponse> => {
+    const response = await api.get<SolvableAnalysisResponse>('/solvable');
     return response.data;
   },
 };

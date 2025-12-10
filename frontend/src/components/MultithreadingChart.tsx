@@ -17,16 +17,26 @@ interface MultithreadingChartProps {
 }
 
 // Category colors mapping
-const CATEGORY_COLORS: { [key: string]: string } = {
-  'synchronization': '#F48024',
-  'deadlock': '#C73A63',
-  'race-condition': '#FF6B6B',
-  'thread-safety': '#0077CC',
-  'performance': '#5EBA7D',
-  'exception': '#9147FF',
-  'memory': '#FFA500',
-  'executor': '#4ECDC4',
-  'default': '#8884d8',
+const COLOR_PALETTE = [
+  '#F48024', // orange
+  '#0077CC', // blue
+  '#5EBA7D', // green
+  '#C73A63', // pink
+  '#9147FF', // purple
+  '#FFD93D', // yellow
+  '#FFA500', // amber
+  '#4ECDC4', // cyan
+  '#7B68EE', // medium slate blue
+  '#6BCF7F', // lime
+  '#FF85A2', // rose
+  '#FF6B6B', // red
+];
+
+// Function to get color for a category
+const getCategoryColor = (category: string): string => {
+  // Use hash of category name to consistently assign colors
+  const hash = category.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return COLOR_PALETTE[hash % COLOR_PALETTE.length];
 };
 
 // Custom tooltip component (outside render)
@@ -49,16 +59,20 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
 };
 
 const MultithreadingChart: React.FC<MultithreadingChartProps> = ({ data }) => {
+  // Get unique categories for legend and create color mapping
+  const categories = Array.from(new Set(data.topProblems.map(p => p.category)));
+  const categoryColorMap: { [key: string]: string } = {};
+  categories.forEach((cat) => {
+    categoryColorMap[cat] = getCategoryColor(cat);
+  });
+
   // Transform data for chart
   const chartData = data.topProblems.map((problem) => ({
     name: problem.patternName,
     count: problem.count,
     category: problem.category,
-    color: CATEGORY_COLORS[problem.category] || CATEGORY_COLORS['default'],
+    color: categoryColorMap[problem.category],
   }));
-
-  // Get unique categories for legend
-  const categories = Array.from(new Set(data.topProblems.map(p => p.category)));
 
   return (
     <div className="w-full">
@@ -68,17 +82,17 @@ const MultithreadingChart: React.FC<MultithreadingChartProps> = ({ data }) => {
         </p>
       </div>
 
-      <ResponsiveContainer width="100%" height={450}>
+      <ResponsiveContainer width="100%" height={600}>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+          margin={{ top: 70, right: 30, left: 20, bottom: 70 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
           <XAxis
             dataKey="name"
             angle={-45}
             textAnchor="end"
-            height={140}
+            height={120}
             tick={{ fontSize: 11 }}
             interval={0}
           />
@@ -102,15 +116,15 @@ const MultithreadingChart: React.FC<MultithreadingChartProps> = ({ data }) => {
           <div key={category} className="flex items-center gap-2">
             <div
               className="w-4 h-4 rounded"
-              style={{ backgroundColor: CATEGORY_COLORS[category] || CATEGORY_COLORS['default'] }}
+              style={{ backgroundColor: categoryColorMap[category] }}
             />
-            <span className="text-sm text-gray-700 capitalize">{category}</span>
+            <span className="text-sm text-gray-700 capitalize">{category.replace(/-|_/g, ' ')}</span>
           </div>
         ))}
       </div>
 
       <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-        <h4 className="font-semibold text-yellow-900 mb-2">⚠️ Common Pitfalls</h4>
+        <h4 className="font-semibold text-yellow-900 mb-2">Common Pitfalls</h4>
         <p className="text-sm text-yellow-800">
           These patterns represent the most frequently encountered problems in Java multithreading.
           Understanding these pitfalls is crucial for writing thread-safe and efficient concurrent code.
@@ -124,7 +138,7 @@ const MultithreadingChart: React.FC<MultithreadingChartProps> = ({ data }) => {
             <div
               key={problem.patternName}
               className="p-4 rounded-lg border-2"
-              style={{ borderColor: CATEGORY_COLORS[problem.category] || CATEGORY_COLORS['default'] }}
+              style={{ borderColor: categoryColorMap[problem.category] }}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl font-bold text-gray-400">#{index + 1}</span>

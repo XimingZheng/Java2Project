@@ -55,3 +55,50 @@ export interface MultithreadingResponse {
   totalThreads: number;
   topProblems: MultithreadingProblem[];
 }
+
+// Solvable Analysis types
+export interface AnalysisFactor {
+  solvableAvg?: number;
+  notSolvableAvg?: number;
+  solvableAvgCharacters?: number;
+  notSolvableAvgCharacters?: number;
+  solvableAvgWords?: number;
+  notSolvableAvgWords?: number;
+  solvableWithCodePercentage?: number;
+  notSolvableWithCodePercentage?: number;
+  solvableAvgCodeBlocks?: number;
+  notSolvableAvgCodeBlocks?: number;
+  solvableAvgTags?: number;
+  notSolvableAvgTags?: number;
+  solvableAvgResponseHours?: number;
+  notSolvableAvgResponseHours?: number;
+  notSolvableNoAnswerPercentage?: number;
+  solvableAvgScore?: number;
+  notSolvableAvgScore?: number;
+  solvableAvgViews?: number;
+  notSolvableAvgViews?: number;
+  difference?: number;
+  percentageDifference?: number;
+  characterDifference?: number;
+  wordDifference?: number;
+}
+
+export interface BasicStats {
+  totalSolvable: number;
+  totalNotSolvable: number;
+  totalQuestions: number;
+  solvablePercentage: number;
+  notSolvablePercentage: number;
+}
+
+export interface SolvableAnalysisResponse {
+  reputationAnalysis: AnalysisFactor;
+  questionLengthAnalysis: AnalysisFactor;
+  codeSnippetAnalysis: AnalysisFactor;
+  tagCountAnalysis: AnalysisFactor;
+  responseTimeAnalysis: AnalysisFactor;
+  questionScoreAnalysis: AnalysisFactor;
+  viewCountAnalysis: AnalysisFactor;
+  titleLengthAnalysis: AnalysisFactor;
+  basicStats: BasicStats;
+}

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { topicApi, coOccurrenceApi, multithreadingApi } from './services/api';
+import { topicApi, coOccurrenceApi, multithreadingApi, solvableAnalysisApi } from './services/api';
 import type { 
   TopicTrendResponse, 
   TopicActivityResponse, 
   CoOccurrenceResponse, 
-  MultithreadingResponse 
+  MultithreadingResponse,
+  SolvableAnalysisResponse
 } from './types/api';
 import TopicSelector from './components/TopicSelector';
 import DateRangePicker from './components/DateRangePicker';
@@ -13,6 +14,7 @@ import TrendChart from './components/TrendChart';
 import ActivityChart from './components/ActivityChart';
 import CoOccurrenceChart from './components/CoOccurrenceChart';
 import MultithreadingChart from './components/MultithreadingChart';
+import SolvableAnalysisChart from './components/SolvableAnalysisChart';
 
 function App() {
   // Topic analysis states
@@ -36,8 +38,12 @@ function App() {
   const [multithreadingN, setMultithreadingN] = useState<number>(10);
   const [multithreadingLoading, setMultithreadingLoading] = useState<boolean>(false);
 
+  // Solvable Analysis states
+  const [solvableData, setSolvableData] = useState<SolvableAnalysisResponse | null>(null);
+  const [solvableLoading, setSolvableLoading] = useState<boolean>(false);
+
   // Active tab state
-  const [activeTab, setActiveTab] = useState<'trends' | 'cooccurrence' | 'multithreading'>('trends');
+  const [activeTab, setActiveTab] = useState<'trends' | 'cooccurrence' | 'multithreading' | 'solvable'>('trends');
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -109,6 +115,20 @@ function App() {
     }
   };
 
+  // Analyze solvable vs hard-to-solve questions
+  const analyzeSolvable = async () => {
+    setSolvableLoading(true);
+    try {
+      const data = await solvableAnalysisApi.getAnalysis();
+      setSolvableData(data);
+    } catch (err) {
+      console.error('Error analyzing solvable questions:', err);
+      setError('Failed to fetch solvable analysis data');
+    } finally {
+      setSolvableLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-stackoverflow-black text-white shadow-lg">
@@ -135,7 +155,7 @@ function App() {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              📈 Topic Trends
+              Topic Trends
             </button>
             <button
               onClick={() => setActiveTab('cooccurrence')}
@@ -145,7 +165,7 @@ function App() {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              🔗 Topic Co-occurrence
+              Topic Co-occurrence
             </button>
             <button
               onClick={() => setActiveTab('multithreading')}
@@ -155,7 +175,17 @@ function App() {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              ⚠️ Multithreading Pitfalls
+              Multithreading Pitfalls
+            </button>
+            <button
+              onClick={() => setActiveTab('solvable')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeTab === 'solvable'
+                  ? 'border-b-2 border-stackoverflow-orange text-stackoverflow-orange'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Solvable Analysis
             </button>
           </div>
         </div>
@@ -234,7 +264,6 @@ function App() {
 
             {!trendData && !activityData && !loading && (
               <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                <div className="text-6xl mb-4">📈</div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
                   Ready to Analyze
                 </h3>
@@ -292,7 +321,6 @@ function App() {
 
             {!coOccurrenceData && !coOccurrenceLoading && (
               <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                <div className="text-6xl mb-4">🔗</div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
                   Ready to Analyze
                 </h3>
@@ -350,12 +378,54 @@ function App() {
 
             {!multithreadingData && !multithreadingLoading && (
               <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                <div className="text-6xl mb-4">⚠️</div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
                   Ready to Analyze
                 </h3>
                 <p className="text-gray-500">
                   Click Analyze to discover common multithreading pitfalls
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Solvable Analysis Tab */}
+        {activeTab === 'solvable' && (
+          <>
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                Solvable vs. Hard-to-Solve Questions Analysis
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Compare Java questions that receive timely, high-quality answers with those that remain hard to solve. 
+                Analyze factors such as user reputation, question clarity, code snippets, and more.
+              </p>
+
+              <button
+                onClick={analyzeSolvable}
+                disabled={solvableLoading}
+                className="px-8 py-2 bg-stackoverflow-orange hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {solvableLoading ? 'Analyzing...' : 'Analyze Solvability Factors'}
+              </button>
+            </div>
+
+            {solvableData && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                  Solvability Analysis Results
+                </h2>
+                <SolvableAnalysisChart data={solvableData} />
+              </div>
+            )}
+
+            {!solvableData && !solvableLoading && (
+              <div className="text-center py-12 bg-white rounded-lg shadow-md">
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Ready to Analyze
+                </h3>
+                <p className="text-gray-500">
+                  Click Analyze to discover what makes questions solvable or hard-to-solve
                 </p>
               </div>
             )}
