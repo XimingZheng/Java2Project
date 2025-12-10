@@ -1,5 +1,10 @@
 import axios from 'axios';
-import type { TopicTrendResponse, TopicActivityResponse } from '../types/api';
+import type { 
+  TopicTrendResponse, 
+  TopicActivityResponse, 
+  CoOccurrenceResponse, 
+  MultithreadingResponse 
+} from '../types/api';
 
 const api = axios.create({
   baseURL: '/api',
@@ -42,6 +47,26 @@ export const topicApi = {
         endDate,
         period,
       },
+    });
+    return response.data;
+  },
+};
+
+// Co-occurrence API
+export const coOccurrenceApi = {
+  getTopCoOccurrence: async (n: number = 10): Promise<CoOccurrenceResponse> => {
+    const response = await api.get<CoOccurrenceResponse>('/occurrence/top', {
+      params: { n },
+    });
+    return response.data;
+  },
+};
+
+// Multithreading API
+export const multithreadingApi = {
+  getTopProblems: async (n: number = 10): Promise<MultithreadingResponse> => {
+    const response = await api.get<MultithreadingResponse>('/multithreading/top', {
+      params: { n },
     });
     return response.data;
   },

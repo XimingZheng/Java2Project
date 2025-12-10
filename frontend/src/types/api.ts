@@ -30,3 +30,28 @@ export interface TopicActivityResponse {
     [topic: string]: ActivityDataPoint[];
   };
 }
+
+// Co-occurrence types
+export interface CoOccurrencePair {
+  topic1: string;
+  topic2: string;
+  count: number;
+}
+
+export interface CoOccurrenceResponse {
+  totalPairs: number;
+  topN: number;
+  coOccurrences: CoOccurrencePair[];
+}
+
+// Multithreading pitfalls types
+export interface MultithreadingProblem {
+  patternName: string;
+  category: string;
+  count: number;
+}
+
+export interface MultithreadingResponse {
+  totalThreads: number;
+  topProblems: MultithreadingProblem[];
+}
